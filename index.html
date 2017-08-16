@@ -529,6 +529,16 @@
                                 // Here we highlight the delivery or delivery zone graphic somehow.
                                 console.log(`Delivery Imminent for ${routeId} stop ${sequence}`);
 
+                                queryDeliveryFenceCustomerIDBySequence(routeId, sequence)
+                                .then(queryCustomerFeatures)
+                                .then(function (attributes) {
+
+                                    nextDeliveryDiv.innerHTML =
+                                        `${attributes.Name}</br>${attributes.SingleLineAddress}</br>Arriving Soon!`;
+
+                                    createCustomerByNameRenderer(attributes.Name);
+                                });
+
                                 createDeliveryFenceRenderer(routeId, sequence);
                                 break;
                             case 'deliveryComplete':
@@ -887,6 +897,8 @@
                     // Clear our sequence tracker;
                     currentRouteId = undefined;
                     currentSequence = undefined;
+
+                    deliveryArray = null;
 
                     routingChannelArray = [
                         `deliveryImminent+${results.routeID}`,
