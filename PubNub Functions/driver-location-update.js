@@ -92,10 +92,10 @@ export default (request) => {
             let exitedFences = oldFences.filter(function (oldFence) {
                 return currentFences.indexOf(oldFence) < 0;
             });
-            console.log('Old fences', request.message.oldFences);
-            console.log('New fences', request.message.currentFences);
-            console.log('Entered', enteredFences);
-            console.log('Exited', exitedFences);
+            // console.log('Old fences', request.message.oldFences);
+            // console.log('New fences', request.message.currentFences);
+            // console.log('Entered', enteredFences);
+            // console.log('Exited', exitedFences);
             request.message.enteredFences = enteredFences;
             request.message.exitedFences = exitedFences;
 
@@ -131,7 +131,7 @@ export default (request) => {
             channel: channelId,
             message: message
         }).then((publishResponse) => {
-            console.log(`Publish Status: ${publishResponse[0]}:${publishResponse[1]} with TT ${publishResponse[2]}`);
+            // console.log(`Publish Status: ${publishResponse[0]}:${publishResponse[1]} with TT ${publishResponse[2]}`);
         });
 
         console.log(`Imminent Delivery Alert on channel ${channelIdForDelivery}`);
@@ -139,7 +139,7 @@ export default (request) => {
             channel: channelIdForDelivery,
             message: message
         }).then((publishResponse) => {
-            console.log(`Publish Status: ${publishResponse[0]}:${publishResponse[1]} with TT ${publishResponse[2]}`);
+            // console.log(`Publish Status: ${publishResponse[0]}:${publishResponse[1]} with TT ${publishResponse[2]}`);
         });
     }
 
@@ -154,12 +154,12 @@ export default (request) => {
             message.routeId = routeId;
             message.sequence = sequence;
         }
-        console.log(`Driver Location Update on channel ${channelId}`);
+        // console.log(`Driver Location Update on channel ${channelId}`);
         pubnub.publish({
             channel: channelId,
             message: message
         }).then((publishResponse) => {
-            console.log(`Publish Status: ${publishResponse[0]}:${publishResponse[1]} with TT ${publishResponse[2]}`);
+            // console.log(`Publish Status: ${publishResponse[0]}:${publishResponse[1]} with TT ${publishResponse[2]}`);
         });
     }
 
@@ -171,7 +171,7 @@ export default (request) => {
 
         return xhr.fetch(queryCurrentFencesURL).then((response) => {
             return response.json().then((parsedResponse) => {
-                console.log('featuresForGeofence ', currentFencesQueryParams.where, parsedResponse.features);
+                // console.log('featuresForGeofence ', currentFencesQueryParams.where, parsedResponse.features);
                 let currentGeofences = (parsedResponse.features || []).map(function (f) {
                     return `${f.attributes.OBJECTID}`;
                 });
@@ -190,7 +190,6 @@ export default (request) => {
     function getLastKnownFencesForUser(userId, token) {
         let oldFencesQueryParams = getUserFencesQueryParams(userId);
         let queryOldFencesURL = `${usersURL}/query?${query.stringify(oldFencesQueryParams)}&token=${token}`;
-        console.log(queryOldFencesURL);
 
         return xhr.fetch(queryOldFencesURL).then((response) => {
             return response.json().then((parsedResponse) => {
@@ -198,7 +197,7 @@ export default (request) => {
                     console.log(parsedResponse.error);
                     return request.abort();
                 }
-                console.log(parsedResponse);
+
                 if (parsedResponse.features.length == 0) {
                     console.log(`Could not find user ${userId}`);
                     return request.abort();
@@ -282,7 +281,6 @@ export default (request) => {
 
         // Now update or create the user record with the current fences listed.            
         return xhr.fetch(addUpdateUserURL, postOptions).then((updateResponse) => {
-            console.log(updateResponse.body);
             return updateResponse.json().then((parsedResponse) => {
                 let result, writeType;
 
@@ -298,7 +296,7 @@ export default (request) => {
                 }
 
                 if (result.success) {
-                    console.log(`${writeType} completed successfully for ${userId}`, result);
+                    // console.log(`${writeType} completed successfully for ${userId}`, result);
                     request.message.arcgisObjectId = result.objectId;
                     return request.ok();
                 } else {
@@ -319,7 +317,6 @@ export default (request) => {
         const store = require('kvstore');
 
         return store.getItem('arcgisToken').then((value) => {
-            console.log(value);
             if (value !== "null") {
                 request.message.arcgisToken = value;
                 // console.log(`Token Exists: ${value}`);
@@ -351,7 +348,7 @@ export default (request) => {
 
                     return request;
                 }).catch((x) => {
-                    console.log("Exception in xhr request: " + x);
+                    console.log("Exception in token xhr request: " + x);
                     return request.abort();
                 });
             }
