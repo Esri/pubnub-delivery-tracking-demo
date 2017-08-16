@@ -74,8 +74,24 @@ define([
         var promise = new dojo.Deferred();
 
         // Given a Driver ID and an array of Customer IDs, get the actual features.
-        getDriverAndCustomers(driverId, customerIds).then(function (results) {
+        getDriverAndCustomerRecords(driverId, customerIds)
+            .then(getRouteUsingDriverAndCustomerRecords)
+            .then(saveOptimalRouteResult)
+            .then(saveDeliveriesAndDeliveryZones)
+            .then(respondToPubNubCaller)
+            .otherwise(function (error) {
 
+                console.error("Failed to save deliveries or zones");
+                console.error(error);
+                promise.reject(error);
+
+            });
+
+        return promise;
+
+
+        // Logic Functions
+        function getRouteUsingDriverAndCustomerRecords(results) {
             var drivers = results[0].features,
                 customers = results[1].features;
 
@@ -91,8 +107,9 @@ define([
 
             // Now get the optimal route from the driver to all the customers.
             return getRoute(_driver, customers);
+        }
 
-        }).then(function (result) {
+        function saveOptimalRouteResult(result) {
 
             // console.log("Optimized route generated!");
             var routeResult = result.routeResults[0];
@@ -107,8 +124,9 @@ define([
             // give us a unique Route ID that glues everything else together.
             return saveRoute(_driver, routeResult);
 
-        }).then(function (addedRoute) {
+        }
 
+        function saveDeliveriesAndDeliveryZones(addedRoute) {
             var range = 0.25;
             _routeID = addedRoute.globalId;
             _customerStops = _stops.slice(1);
@@ -122,8 +140,9 @@ define([
             return all([calculateAndSaveZones(_routeID, _customerStops, range),
                 saveDeliveries(_routeID, _customerStops)
             ]);
+        }
 
-        }).then(function (results) {
+        function respondToPubNubCaller(results) {
 
             var savedZones = results[0];
             var savedDeliveries = results[1].successes;
@@ -142,15 +161,8 @@ define([
                 deliveries: savedDeliveries
             });
 
-        }).otherwise(function (error) {
+        }
 
-            console.error("Failed to save deliveries or zones");
-            console.error(error);
-            promise.reject(error);
-
-        });
-
-        return promise;
     }
 
 
@@ -492,7 +504,7 @@ define([
 
 
     // READING RECORDS
-    function getDriverAndCustomers(driverId, customerIds) {
+    function getDriverAndCustomerRecords(driverId, customerIds) {
         var driverLayer = __serviceLayers.driver;
         var driverQuery = new Query({
             outFields: ["GlobalID", "Name"],
