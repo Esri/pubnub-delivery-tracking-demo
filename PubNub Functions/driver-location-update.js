@@ -64,12 +64,14 @@ export default (request) => {
     let routeId = request.message.routeId;
     let sequence = request.message.sequence;
 
+    // Alert any listeners (e.g. the Management App) of the driver's new Lat/Lng
     pubnubPublishDriverLocation(userId, newLat, newLng, routeId, sequence);
 
+    // Now do stuff with ArcGIS Online...
     return getToken(clientID, clientSecret).then(() => {
         const arcgisToken = request.message.arcgisToken;
         delete request.message.arcgisToken;
-        // Get a user record for the UserID to find the last fences we saw the user in.
+        // Find the last fences we saw the user in.
         let getLastFences = getLastKnownFencesForUser(userId, arcgisToken);
 
         if (routeId === undefined) {
@@ -83,6 +85,7 @@ export default (request) => {
         // Get the fences that the updated lat/lng are in
         let getCurrentFences = getFencesForLocation(newLat, newLng, routeId, sequence, arcgisToken);
 
+        // Figure out the difference. What was entered? What was left?
         return promise.all([getLastFences, getCurrentFences]).then((results) => {
             let currentFences = request.message.currentFences;
             let oldFences = request.message.oldFences;

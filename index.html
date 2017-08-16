@@ -99,7 +99,7 @@
 
     <!-- Panels -->
 
-    <div class="calcite-panels calcite-panels-right calcite-text-light calcite-bg-dark panel-group">
+    <div class="calcite-panels calcite-panels-left calcite-text-light calcite-bg-dark panel-group">
 
         <!-- Panel - Basemaps -->
 
@@ -333,6 +333,8 @@
                     zoom: 12
                 });
 
+                mapView.ui.move([ "zoom" ], "bottom-right");
+
                 // Popup
                 mapView.then(function () {
                     mapView.popup.dockEnabled = false;
@@ -519,7 +521,7 @@
                         }
                     },
                     message: function (m) {
-                        console.log(`PubNub Message received on ${m.channel}`);
+                        // console.log(`PubNub Message received on ${m.channel}`);
 
                         var channelName = m.channel.split('+');
                         switch (channelName[0]) {
@@ -527,6 +529,10 @@
                                 var routeId = channelName[1];
                                 var sequence = m.message.sequence;
                                 // Here we highlight the delivery or delivery zone graphic somehow.
+                                if (currentSequence !== undefined && currentSequence > sequence) {
+                                    // Can sometimes occur on slow network days.
+                                    break;
+                                }
                                 console.log(`Delivery Imminent for ${routeId} stop ${sequence}`);
 
                                 queryDeliveryFenceCustomerIDBySequence(routeId, sequence)
