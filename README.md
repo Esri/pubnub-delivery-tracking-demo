@@ -77,6 +77,8 @@ There are 3 high-level steps to getting this demo working in your own environmen
 
 ## Resources
 
+* [ArcGIS for Developers](https://developers.arcgis.com)
+* [PubNub Functions](https://www.pubnub.com/products/functions/)
 * [ArcGIS Blog](http://blogs.esri.com/esri/arcgis/)
 * [@esri](http://twitter.com/esri) on twitter
 
