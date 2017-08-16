@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<!-- 
+    Copyright 2017 Esri
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+        http://www.apache.org/licenses/LICENSE-2.0
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.​
+-->
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+    <meta name="description" content="ArcGIS JS v4, Calcite Maps and Pubnub example">
+
+    <title>Tracking Dashboard</title>
+
+    <!-- Calcite Maps Bootstrap -->
+    <link rel="stylesheet" href="https://esri.github.io/calcite-maps/dist/css/calcite-maps-bootstrap.min-v0.4.css">
+
+    <!-- Calcite Maps -->
+    <link rel="stylesheet" href="https://esri.github.io/calcite-maps/dist/css/calcite-maps-arcgis-4.x.min-v0.4.css">
+
+    <!-- ArcGIS JS 4 -->
+    <link rel="stylesheet" href="https://js.arcgis.com/4.4/esri/css/main.css">
+
+    <style>
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        #trackingSelector {
+            text-align: center;
+        }
+
+        #deliverySelector {
+            text-align: center;
+        }
+    </style>
+
+</head>
+
+<body class="calcite-maps calcite-nav-top">
+    <!-- Navbar -->
+
+    <nav class="navbar calcite-navbar navbar-fixed-top calcite-text-light calcite-bg-dark">
+        <!-- Menu -->
+        <div class="dropdown calcite-dropdown calcite-text-dark calcite-bg-light" role="presentation">
+            <a class="dropdown-toggle" role="menubutton" aria-haspopup="true" aria-expanded="false" tabindex="0">
+                <div class="calcite-dropdown-toggle">
+                    <span class="sr-only">Toggle dropdown menu</span>
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </a>
+            <ul class="dropdown-menu" role="menu">
+                <li><a role="menuitem" tabindex="0" href="#" data-target="#trackingSelector" aria-haspopup="true"><span class="glyphicon glyphicon-road"></span> Tracking</a></li>
+                <li><a role="menuitem" tabindex="0" href="#" data-target="#deliverySelector" aria-haspopup="true"><span class="glyphicon glyphicon-road"></span> Delivery</a></li>
+                <li><a role="menuitem" tabindex="0" href="#" data-target="#panelBasemaps" aria-haspopup="true"><span class="glyphicon glyphicon-th-large"></span> Basemaps</a></li>
+                <li><a role="menuitem" tabindex="0" href="#" data-target="#panelLegend" aria-haspopup="true"><span class="glyphicon glyphicon-list-alt"></span> Legend</a></li>
+                <li><a role="menuitem" tabindex="0" href="#" data-target="#panelLayers" aria-haspopup="true"><span class="glyphicon glyphicon-list"></span> Layers</a></li>
+                <li><a role="menuitem" tabindex="0" href="#" id="calciteToggleNavbar" aria-haspopup="true"><span class="glyphicon glyphicon-fullscreen"></span> Full Map</a></li>
+            </ul>
+        </div>
+        <!-- Title -->
+        <div class="calcite-title calcite-overflow-hidden">
+            <span class="calcite-title-main">Real-time Tracking</span>
+            <span class="calcite-title-divider hidden-xs"></span>
+            <span class="calcite-title-sub hidden-xs">An Esri/PubNub Application</span>
+        </div>
+        <!-- Nav -->
+        <ul class="nav navbar-nav calcite-nav">
+            <li>
+                <div class="calcite-navbar-search calcite-search-expander">
+                    <div id="searchWidgetDiv"></div>
+                </div>
+            </li>
+        </ul>
+    </nav>
+    <!--/.calcite-navbar -->
+
+    <!-- Map  -->
+
+    <div class="calcite-map calcite-map-absolute" style="top: 50px;">
+        <div id="mapViewDiv"></div>
+    </div>
+
+    <!-- /.calcite-map -->
+
+    <!-- Panels -->
+
+    <div class="calcite-panels calcite-panels-right calcite-text-light calcite-bg-dark panel-group">
+
+        <!-- Panel - Basemaps -->
+
+        <div id="panelBasemaps" class="panel collapse">
+            <div id="headingBasemaps" class="panel-heading" role="tab">
+                <div class="panel-title">
+                    <a class="panel-toggle collapsed" role="button" data-toggle="collapse" href="#collapseBasemaps" aria-expanded="false" aria-controls="collapseBasemaps"><span class="glyphicon glyphicon-th-large" aria-hidden="true"></span><span class="panel-label">Basemaps</span></a>
+                    <a class="panel-close" role="button" data-toggle="collapse" tabindex="0" href="#panelBasemaps"><span class="esri-icon esri-icon-close" aria-hidden="true"></span></a>
+                </div>
+            </div>
+            <div id="collapseBasemaps" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingBasemaps">
+                <div class="panel-body">
+                    <div id="basemapGalleryDiv">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel - Legend -->
+
+        <div id="panelLegend" class="panel collapse">
+            <div id="headingLegend" class="panel-heading" role="tab">
+                <div class="panel-title">
+                    <a class="panel-toggle" role="button" data-toggle="collapse" href="#collapseLegend" aria-expanded="false" aria-controls="collapseLegend"><span class="glyphicon glyphicon-list-alt" aria-hidden="true"></span><span class="panel-label">Legend</span></a>
+                    <a class="panel-close" role="button" data-toggle="collapse" tabindex="0" href="#panelLegend"><span class="esri-icon esri-icon-close" aria-hidden="true"></span></a>
+                </div>
+            </div>
+            <div id="collapseLegend" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingLegend">
+                <div class="panel-body">
+                    <div id="legendDiv"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel - Layers -->
+
+        <div id="panelLayers" class="panel collapse">
+            <div id="headingLayers" class="panel-heading" role="tab">
+                <div class="panel-title">
+                    <a class="panel-toggle" role="button" data-toggle="collapse" href="#collapseLayers" aria-expanded="false" aria-controls="collapseLayers"><span class="glyphicon glyphicon-list" aria-hidden="true"></span><span class="panel-label">Layers</span></a>
+                    <a class="panel-close" role="button" data-toggle="collapse" tabindex="0" href="#panelLayers"><span class="esri-icon esri-icon-close" aria-hidden="true"></span></a>
+                </div>
+            </div>
+            <div id="collapseLayers" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingLayers">
+                <div class="panel-body">
+                    <div id="layersDiv"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="trackingSelector" class="panel collapse in">
+            <div id="trackingSelectionHeader" class="panel-heading" role="tab">
+                <div class="panel-title">
+                    <a class="panel-toggle" role="button" data-toggle="collapse" href="#collapseTracking" aria-expanded="false" aria-controls="collapseTracking"><span class="glyphicon glyphicon-list" aria-hidden="true"></span><span class="panel-label">Tracking Controls</span></a>
+                    <a class="panel-close" role="button" data-toggle="collapse" tabindex="0" href="#trackingSelector"><span class="esri-icon esri-icon-close" aria-hidden="true"></span></a>
+                </div>
+            </div>
+            <div id="collapseTracking" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="trackingSelectionHeader">
+                <div class="panel-body">
+                    <div id="trackinglist-div">
+                        <button id="trackingStart" type="button" class="btn btn-default">
+                       <span class="glyphicon glyphicon-play" aria-hidden="true"></span> Start
+                    </button>
+                        <button id="trackingStop" type="button" class="btn btn-default">
+                        <span class="glyphicon glyphicon-stop" aria-hidden="true"></span> Stop
+                    </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="deliverySelector" class="panel collapse in">
+            <div id="deliverySelectionHeader" class="panel-heading" role="tab">
+                <div class="panel-title">
+                    <a class="panel-toggle" role="button" data-toggle="collapse" href="#collapseDelivery" aria-expanded="false" aria-controls="collapseDelivery"><span class="glyphicon glyphicon-list" aria-hidden="true"></span><span class="panel-label">Next Delivery</span></a>
+                    <a class="panel-close" role="button" data-toggle="collapse" tabindex="0" href="#deliverySelector"><span class="esri-icon esri-icon-close" aria-hidden="true"></span></a>
+                </div>
+            </div>
+            <div id="collapseDelivery" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="deliverySelectionHeader">
+                <div class="panel-body">
+                    <div id="nextDeliveryDiv" style="text-align: left;"></div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- /.calcite-panels -->
+
+    <script type="text/javascript">
+        var dojoConfig = {
+            packages: [{
+                    name: "bootstrap",
+                    location: "https://esri.github.io/calcite-maps/dist/vendor/dojo-bootstrap"
+                },
+                {
+                    name: "calcite-maps",
+                    location: "https://esri.github.io/calcite-maps/dist/js/dojo"
+                },
+                {
+                    name: "identity-manager-cacher",
+                    location: "https://nixta.github.io/js-api-identity-manager-cacher/js/4.x"
+                },
+                {
+                    name: "deliveries",
+                    location: location.pathname.replace(/\/[^/]+$/, "/") + "./js/deliveries"
+                }
+            ]
+        };
+    </script>
+
+    <script src="https://cdn.pubnub.com/sdk/javascript/pubnub.4.13.0.js"></script>
+    <!-- ArcGIS JS 4 -->
+    <script src="https://js.arcgis.com/4.4/"></script>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script>
+        require([
+            // ArcGIS
+            "esri/Map",
+            "esri/WebMap",
+            "esri/views/MapView",
+            "esri/layers/FeatureLayer",
+            "esri/geometry/Point",
+            "esri/symbols/SimpleMarkerSymbol",
+            "esri/symbols/SimpleLineSymbol",
+            "esri/symbols/SimpleFillSymbol",
+            "esri/renderers/UniqueValueRenderer",
+            "esri/renderers/SimpleRenderer",
+            "esri/Graphic",
+            "esri/layers/GraphicsLayer",
+            "esri/tasks/support/Query",
+
+            // Widgets
+            "esri/widgets/BasemapGallery",
+            "esri/widgets/Search",
+            "esri/widgets/Legend",
+            "esri/widgets/LayerList",
+            "esri/widgets/Print",
+            "esri/widgets/ScaleBar",
+            "deliveries/tools",
+
+            // Bootstrap
+            "bootstrap/Collapse",
+            "bootstrap/Dropdown",
+
+            // Calcite Maps
+            "calcite-maps/calcitemaps-v0.4",
+
+            "identity-manager-cacher/cacher",
+
+            "dojo/domReady!"
+        ], function (
+            Map, WebMap, MapView,
+            FeatureLayer, Point, SimpleMarkerSymbol, SimpleLineSymbol, SimpleFillSymbol, UniqueValueRenderer,
+            SimpleRenderer,
+            Graphic, GraphicsLayer, Query, Basemaps, Search, Legend, LayerList,
+            Print, ScaleBar, deliveryTools) {
+
+            // Map stuff
+            var map, mapView, basemaps, searchWidget, layerWidget, scaleBar;
+
+            // Service related
+            var __customers, __drivers, serviceLayers, driverId, customers, routingChannelArray;
+
+            // Delivery stuff
+            var currentRouteId, currentSequence, deliveryArray = null,
+                nextDeliveryDiv, driverMarkerSymbol;
+
+            // Here's our symbol JSON
+            var defaultCustomerPointSymbolJSON, defaultDeliveryFenceSymbolJSON, activetDeliveryFenceSymbolJSON;
+
+            // Pubnub globals
+            var pubnub, pubnubDelivery;
+
+            // Config
+            var pubnubConfig, serviceURL, simServiceURL;
+
+
+
+            initConfig();
+            initVariables();
+            initServiceLayers();
+            initPopupTemplates();
+
+            initMap();
+            initWidgets();
+            initMapClickListener();
+            initButtonClickListener();
+
+
+
+            ///////////////////////////////
+            /// CONFIGURATION
+            ///////////////////////////////
+
+            function initConfig() {
+                // ArcGIS Configuration
+                serviceURL = "YOUR ARCGIS DELIVERYTRACKING SERVICE URL";
+                simServiceURL = "YOUR ARCGIS DRIVERSIMULATION SERVICE URL";
+
+                // PubNub Configuration
+                pubnubConfig = {
+                    publishKey: 'YOUR PUBNUB PUBLISH KEY',
+                    subscribeKey: 'YOUR PUBNUB SUBSCRIBE KEY'
+                };
+            }
+
+
+
+            ///////////////////////////////
+            /// MAP VIEW + UI
+            ///////////////////////////////
+
+            function initMap() {
+                map = new Map({
+                    basemap: "streets-navigation-vector",
+                    layers: [
+                        serviceLayers.delivery,
+                        serviceLayers.deliveryFence,
+                        serviceLayers.route,
+                        serviceLayers.customer
+                    ]
+                });
+
+                // View
+                mapView = new MapView({
+                    container: "mapViewDiv",
+                    map: map,
+                    center: [-73.97, 40.75],
+                    zoom: 12
+                });
+
+                // Popup
+                mapView.then(function () {
+                    mapView.popup.dockEnabled = false;
+                    mapView.popup.dockOptions = {
+                        buttonEnabled: false
+                    };
+
+                    initDemoData();
+                    initPubnub();
+                    watchPubNubDrivers();
+                });
+            }
+
+            function initWidgets() {
+                // Basemaps
+                basemaps = new Basemaps({
+                    container: "basemapGalleryDiv",
+                    view: mapView
+                })
+
+                // Search - add to navbar
+                searchWidget = new Search({
+                    container: "searchWidgetDiv",
+                    view: mapView
+                });
+
+                // LayerList
+                layerWidget = new LayerList({
+                    container: "layersDiv",
+                    view: mapView
+                });
+
+                // Scalebar
+                scaleBar = new ScaleBar({
+                    view: mapView
+                });
+                mapView.ui.add(scaleBar, "bottom-left");
+
+            }
+
+            function initPopupTemplates() {
+                serviceLayers.customer.popupTemplate = {
+                    title: "Customer",
+                    content: "{Name}<p>{SingleLineAddress}"
+                };
+            }
+
+
+
+            ///////////////////////////////
+            /// INITIALIZATION
+            ///////////////////////////////
+
+            function initVariables() {
+                nextDeliveryDiv = document.getElementById("nextDeliveryDiv");
+                nextDeliveryDiv.innerHTML = "No deliveries scheduled";
+
+                defaultCustomerPointSymbolJSON = {
+                    "type": "esriSMS",
+                    "style": "esriSMSCircle",
+                    "color": [0, 0, 0, 255],
+                    "size": 7,
+                    "angle": 0,
+                    "xoffset": 0,
+                    "yoffset": 0,
+                    "outline": {
+                        "color": [255, 255, 255, 255],
+                        "width": 1
+                    }
+                };
+                defaultDeliveryFenceSymbolJSON = {
+                    "type": "esriSFS",
+                    "style": "esriSFSSolid",
+                    "color": [203, 119, 196, 65],
+                    "outline": {
+                        "type": "esriSLS",
+                        "style": "esriSLSSolid",
+                        "color": [110, 110, 110, 255],
+                        "width": 0.69999999999999996
+                    }
+                };
+                activetDeliveryFenceSymbolJSON = {
+                    "type": "esriSFS",
+                    "style": "esriSFSSolid",
+                    "color": [0, 0, 255, 65],
+                    "outline": {
+                        "type": "esriSLS",
+                        "style": "esriSLSSolid",
+                        "color": [110, 110, 110, 255],
+                        "width": 0.69999999999999996
+                    }
+                };
+
+                // Create a symbol for drawing the point
+                driverMarkerSymbol = new SimpleMarkerSymbol({
+                    style: "circle",
+                    color: [0, 0, 255],
+                    size: 12,
+                    outline: {
+                        color: [255, 255, 255],
+                        width: 2
+                    }
+                });
+            }
+
+            function initServiceLayers() {
+                serviceLayers = deliveryTools.getFeatureLayers(serviceURL);
+                serviceLayers.deliveryFence.id = "deliveryFence";
+                serviceLayers.route.id = "route";
+                serviceLayers.customer.id = "customer";
+
+                // Initialize the layers to show no data
+                serviceLayers.delivery.definitionExpression =
+                    "GlobalID = '00000000-0000-0000-0000-000000000000'";
+                serviceLayers.route.definitionExpression = "GlobalID = '00000000-0000-0000-0000-000000000000'";
+                serviceLayers.deliveryFence.definitionExpression =
+                    "RouteID = '00000000-0000-0000-0000-000000000000'";
+
+                // For simulation...
+                deliveryTools.setSimLayers(simServiceURL);
+            }
+
+            function initPubnub() {
+                pubnub = new PubNub(pubnubConfig);
+                pubnubDelivery = new PubNub(pubnubConfig);
+
+                // Permanent listener - not temporary
+                pubnub.addListener({
+                    status: function (statusEvent) {
+                        if (statusEvent.error) {
+                            console.log("PubNub Status Event");
+                            console.log(statusEvent);
+                        }
+                    },
+                    message: function (m) {
+                        // console.log(`PubNub Message received on ${m.channel}`);
+
+                        var channelName = m.channel.split('+');
+                        switch (channelName[0]) {
+                            case 'driverLocation':
+                                var driverId = channelName[1];
+                                var lat = m.message.lat,
+                                    lon = m.message.lon;
+                                var routeId = m.message.routeId,
+                                    sequence = m.message.sequence;
+                                if (currentRouteId !== routeId || currentSequence !== sequence) {
+                                    currentRouteId = routeId;
+                                    currentSequence = sequence;
+                                    console.log(
+                                        `Driver now on delivery ${sequence} of route ${routeId}`
+                                    );
+
+                                    // Only need to run this once
+                                    if (!deliveryArray) {
+                                        queryDeliveryETA(routeId).then(function (result) {
+                                            deliveryArray = result;
+                                        });
+                                    }
+
+                                    queryDeliveryFenceCustomerIDBySequence(routeId, sequence)
+                                        .then(queryCustomerFeatures)
+                                        .then(function (attributes) {
+
+                                            var eta = queryDeliveryArrayBySequence(
+                                                deliveryArray, currentSequence);
+
+                                            nextDeliveryDiv.innerHTML =
+                                                `${attributes.Name}</br>${attributes.SingleLineAddress}</br>ETA: ${eta} minutes`;
+
+                                            createCustomerByNameRenderer(attributes.Name);
+                                        });
+                                }
+                                moveDriver(driverId, lat, lon);
+                                break;
+                        }
+                    }
+                });
+
+                pubnubDelivery.addListener({
+                    status: function (statusEvent) {
+                        if (statusEvent.error) {
+                            console.log("PubNub Status Event");
+                            console.log(statusEvent);
+                        }
+                    },
+                    message: function (m) {
+                        console.log(`PubNub Message received on ${m.channel}`);
+
+                        var channelName = m.channel.split('+');
+                        switch (channelName[0]) {
+                            case 'deliveryImminent':
+                                var routeId = channelName[1];
+                                var sequence = m.message.sequence;
+                                // Here we highlight the delivery or delivery zone graphic somehow.
+                                console.log(`Delivery Imminent for ${routeId} stop ${sequence}`);
+
+                                createDeliveryFenceRenderer(routeId, sequence);
+                                break;
+                            case 'deliveryComplete':
+                                var routeId = channelName[1];
+                                var sequence = m.message.sequence;
+                                console.log(`Delivery Completed for ${routeId} stop ${sequence}`);
+
+                                if (sequence === deliveryArray.length) {
+                                    nextDeliveryDiv.innerHTML = "All deliveries completed.";
+                                }
+
+                                // Reset Renderers
+                                createDefaultCustomerRenderer();
+                                createDefaultDeliveryFenceRenderer();
+
+                                // Remove listeners for route-related channels
+                                // onDeliveryStopHandler(routingChannelArray);
+                                break;
+                        }
+                        // console.log(m);
+                    }
+                });
+            }
+
+
+
+            ///////////////////////////////
+            /// GRAPHICS HANDLING
+            ///////////////////////////////
+
+            function moveDriver(driverId, lat, lon) {
+                // console.log("Moving driver", driverId, lat, lon);
+                addDriverGraphicToMap(lat, lon, driverId);
+            }
+
+            function getGraphic(key) {
+                return mapView.graphics.find(function (g) {
+                    return g.attributes.key == key;
+                });
+            }
+
+            // Add a graphic and open popup
+            function addDriverGraphicToMap(lat, lon, key) {
+                mapView.graphics.remove(getGraphic(key));
+
+                var pointGraphic = new Graphic({
+                    geometry: new Point({
+                        latitude: lat,
+                        longitude: lon
+                    }),
+                    attributes: {
+                        key: key
+                    },
+                    symbol: driverMarkerSymbol
+                });
+
+                mapView.graphics.add(pointGraphic);
+            }
+
+
+
+
+            function publishRouteCreatedPubNubEvent(results) {
+                // This will also trigger the simulator to start following the new route.
+                var deliveryEvents = results.deliveries.map(function (delivery) {
+                    var a = delivery.attributes;
+                    return {
+                        id: a.GlobalId,
+                        customerId: a.CustomerID,
+                        sequence: a.Sequence,
+                        eta: a.ETA
+                    };
+                });
+
+                var newRoutePayload = {
+                    channel: 'route_created',
+                    message: {
+                        routeId: results.routeID,
+                        driverId: results.driver.attributes.GlobalID,
+                        deliveries: deliveryEvents
+                    }
+                };
+
+                pubnub.publish(newRoutePayload, function (status, response) {
+                    if (status.error) {
+                        console.log(status, response);
+                    }
+                });
+            }
+
+
+
+            ///////////////////////////////
+            /// QUERIES
+            ///////////////////////////////
+
+            function queryDeliveryFenceCustomerIDBySequence(routeID, sequence) {
+
+                var promise = new dojo.Deferred();
+
+                var fenceQuery = new Query({
+                    outFields: ["CustomerID"],
+                    where: "RouteID='" + routeID + "' AND Sequence=" + sequence,
+                    returnGeometry: false
+                });
+
+                serviceLayers.deliveryFence.queryFeatures(fenceQuery).then(function (results) {
+                    promise.resolve(results.features[0].attributes.CustomerID);
+                }).otherwise(function (err) {
+                    console.error(err);
+                });
+
+                return promise;
+            }
+
+            /**
+             * Query once when route is built and push results into an array.
+             * @param routeID
+             * @return {dojo.Deferred} Array of feature attributes in the form of a delivery manifest
+             */
+            function queryDeliveryETA(routeID) {
+
+                var promise = new dojo.Deferred();
+
+                var query = new Query({
+                    outFields: ["CustomerID", "Sequence", "ETA"],
+                    where: "RouteID='" + routeID + "'",
+                    returnGeometry: false
+                });
+
+                serviceLayers.delivery.queryFeatures(query).then(function (results) {
+
+                    var array = [];
+                    results.features.forEach(function (d) {
+                        array.push(d.attributes);
+                    });
+
+                    promise.resolve(array);
+                }).otherwise(function (err) {
+                    console.error(err);
+                });
+
+                return promise;
+            }
+
+            function queryDeliveryArrayBySequence(deliveryArray, currentSequence) {
+
+                var eta = null;
+
+                // Probably better to use a for loop and break after value determined
+                deliveryArray.forEach((function (currentValue, index) {
+                    if (currentSequence > 1 && currentValue.Sequence === currentSequence) {
+                        eta = currentValue.ETA - deliveryArray[index - 1].ETA;
+                    } else if (currentSequence === 1 && currentValue.Sequence === currentSequence) {
+                        eta = currentValue.ETA;
+                    }
+                }));
+
+                return eta;
+            }
+
+            function queryDeliveryFenceFeatureBySequence(routeID, sequence) {
+
+                var promise = new dojo.Deferred();
+
+                var fenceQuery = new Query({
+                    outFields: ["GlobalID"],
+                    where: "RouteID='" + routeID + "' AND Sequence=" + sequence,
+                    returnGeometry: true
+                });
+
+                serviceLayers.deliveryFence.queryFeatures(fenceQuery).then(function (results) {
+                    promise.resolve(results.features[0].attributes.GlobalID);
+                }).otherwise(function (err) {
+                    console.error(err);
+                });
+
+                return promise;
+            }
+
+            function queryDeliveryFenceFeaturesByRouteID(routeID) {
+
+                var promise = new dojo.Deferred();
+
+                var fenceQuery = new Query({
+                    outFields: ["CustomerID"],
+                    where: "RouteID='" + routeID,
+                    returnGeometry: false
+                });
+
+                serviceLayers.deliveryFence.queryFeatures(fenceQuery).then(function (results) {
+
+                    var simpleArray = [];
+                    results.forEach(function (result) {
+                        simpleArray.push(result.CustomerID);
+                    });
+
+                    promise.resolve(simpleArray);
+                }).otherwise(function (err) {
+                    console.error(err);
+                });
+
+                return promise;
+            }
+
+            function queryCustomerFeatures(customerID) {
+                var promise = new dojo.Deferred();
+
+                var customerQuery = new Query({
+                    outFields: ["Name, SingleLineAddress"],
+                    where: "GlobalID='" + customerID + "'",
+                    returnGeometry: true
+                });
+
+                serviceLayers.customer.queryFeatures(customerQuery).then(function (results) {
+                    promise.resolve(results.features[0].attributes);
+                }).otherwise(function (err) {
+                    console.error(err);
+                });
+
+                return promise;
+            }
+
+            ///////////////////////////////
+            /// RENDERERS
+            ///////////////////////////////
+
+            function createCustomerByNameRenderer(Name) {
+                var renderer = new UniqueValueRenderer({
+                    field: "Name",
+                    defaultSymbol: SimpleMarkerSymbol.fromJSON(defaultCustomerPointSymbolJSON)
+                });
+
+                renderer.addUniqueValueInfo(Name,
+                    new SimpleMarkerSymbol({
+                        color: [255, 255, 0],
+                        size: 15
+                    })
+                );
+
+                serviceLayers.customer.renderer = renderer;
+            }
+
+            function createDeliveryFenceRenderer(routeId, sequence) {
+                var renderer = new UniqueValueRenderer({
+                    field: "RouteID",
+                    field2: "Sequence",
+                    fieldDelimiter: ";",
+                    defaultSymbol: SimpleFillSymbol.fromJSON(defaultDeliveryFenceSymbolJSON)
+                });
+
+                renderer.addUniqueValueInfo(`${routeId.toLowerCase()};${sequence}`,
+                    SimpleFillSymbol.fromJSON(activetDeliveryFenceSymbolJSON)
+                );
+
+                serviceLayers.deliveryFence.renderer = renderer;
+            }
+
+            function createDefaultDeliveryFenceRenderer(globalID) {
+                var renderer = SimpleRenderer({
+                    symbol: SimpleFillSymbol.fromJSON(defaultDeliveryFenceSymbolJSON)
+                });
+
+                serviceLayers.deliveryFence.renderer = renderer;
+            }
+
+            function createDefaultCustomerRenderer() {
+                var renderer = new SimpleRenderer({
+                    symbol: SimpleMarkerSymbol.fromJSON(defaultCustomerPointSymbolJSON)
+                });
+
+                serviceLayers.customer.renderer = renderer;
+            }
+
+
+            ///////////////////////////////
+            /// UI CLICK HANDLERS
+            ///////////////////////////////
+
+            function initButtonClickListener() {
+                $('#trackingStart').on('click', function (e) {
+                    onTrackingStartHandler();
+                    buildRouteHandler(serviceURL, driverId /* default is __drivers.andy */ , customers);
+                });
+
+                $('#trackingStop').on('click', function (e) {
+                    onTrackingStopHandler();
+                });
+            }
+
+            function initMapClickListener() {
+                mapView.on("click", function (event) {
+                    var screenPoint = {
+                        x: event.x,
+                        y: event.y
+                    };
+                    onMapClickHandler(screenPoint);
+                });
+            }
+
+            ///////////////////////////////
+            /// HANDLERS
+            ///////////////////////////////
+
+            function onDeliveryStopHandler(channelArray) {
+                console.log("Stop delivery");
+                pubnub.unsubscribe({
+                    channels: channelArray
+                })
+            }
+
+            function onDeliveryStartHandler(channelArray) {
+                console.log("Start delivery");
+                pubnub.subscribe({
+                    channels: channelArray
+                })
+            }
+
+            function onTrackingStopHandler() {
+                console.log("Stop click");
+                pubnub.unsubscribe({
+                    channels: [
+                        `driverLocation+${__drivers.andy}`, //Andy?
+                        `driverLocation+${__drivers.nick}`
+                    ]
+                })
+            }
+
+            function onTrackingStartHandler() {
+                console.log("Start click");
+                watchPubNubDrivers();
+            }
+
+            function watchPubNubDrivers() {
+                pubnub.subscribe({
+                    channels: [
+                        `driverLocation+${__drivers.andy}`, //Andy?
+                        `driverLocation+${__drivers.nick}`
+                    ]
+                });
+            }
+
+            function buildRouteHandler(service, id, customers) {
+
+                var promise = new dojo.Deferred();
+
+                // Choose a random subarray of customers
+                customers = getRandomSubArray(Object.keys(__customers), 5).map(function (x) {
+                    return __customers[x];
+                });
+
+                deliveryTools.buildRoute(service, id, customers).then(function (results) {
+                    console.log(`Created a route with ${results.customers.length} deliveries!`, results
+                        .routeID);
+
+                    // Clear our sequence tracker;
+                    currentRouteId = undefined;
+                    currentSequence = undefined;
+
+                    routingChannelArray = [
+                        `deliveryImminent+${results.routeID}`,
+                        `deliveryComplete+${results.routeID}`
+                    ];
+
+                    console.log("Subscribing");
+                    console.log(routingChannelArray);
+                    pubnubDelivery.subscribe({
+                        channels: routingChannelArray
+                    });
+
+                    // Tell PubNub a new route exists.
+                    publishRouteCreatedPubNubEvent(results);
+
+                    serviceLayers.route.definitionExpression = `GlobalID='${results.routeID}'`;
+                    serviceLayers.deliveryFence.definitionExpression = `RouteID = '${results.routeID}'`;
+
+                    onDeliveryStartHandler([`deliveryImminent+'${results.routeID}'`]);
+
+                    promise.resolve(results);
+                }).otherwise(function (error) {
+                    console.error("Error calculating or creating the delivery route!");
+                    console.error(error);
+                    promise.reject(error);
+                });
+
+                return promise;
+            }
+
+            function onMapClickHandler(screenPoint) {
+                // Search for graphics at the clicked location
+                mapView.hitTest(screenPoint).then(function (response) {
+                    if (response.results[0].graphic) {
+                        console.log("Top graphic found! Here it is: ", response.results[0].graphic);
+                        //                    addGraphicToMap(response.results[0].graphic.geometry.latitude, response.results[0].graphic.geometry.longitude, "Hi!");
+                    }
+                });
+            }
+
+            ///////////////////////////////
+            /// MISC. TOOLS
+            ///////////////////////////////
+
+            // Create a random list of customers of size n
+            function getRandomSubArray(arr, size) {
+                var shuffled = arr.slice(0),
+                    i = arr.length,
+                    temp, index;
+                while (i--) {
+                    index = Math.floor((i + 1) * Math.random());
+                    temp = shuffled[index];
+                    shuffled[index] = shuffled[i];
+                    shuffled[i] = temp;
+                }
+                return shuffled.slice(0, size);
+            }
+
+
+            //////////////////////////////////
+            /// Demo Data
+            //////////////////////////////////
+            function initDemoData() {
+                __customers = {
+                    aurelio: "90481343-3C37-427D-9FF8-1ACFE2E10B26", // Aurelio Abrego
+                    beaulah: "8AB0D0CA-730C-498A-A838-AC21132AF7B5", // Beaulah Braga
+                    brenton: "C7663558-6C95-4FA3-9773-155FB1731F7D", // Brenton Bearse
+                    bruce: "363B947C-36CD-44F3-9D19-8AE355E0625F", // Bruce Warne
+                    carissa: "2086627C-E93C-4C92-B193-2B491C1D30D4", // Carissa Cheatham
+                    carolynn: "5D3FE945-945B-48DF-B79A-692B09DCCB43", // Carolynn Carrick
+                    christin: "EFF8CF3E-0997-412D-B004-25B8ACB7D42D", // Christin Critchfield
+                    emanuel: "76BC022A-181B-4840-8324-7BA2B2458264", // Emanuel Evangelista
+                    esta: "B287D6AC-A00C-419A-A4F1-81542D090EC3", // Esta Edenfield
+                    ethelene: "0A178B3D-A23F-48B3-8799-3052A0B045AF", // Ethelene Eure
+                    flo: "3CDA63B6-2F9D-4E2F-8E70-23C11CCFA726", // Flo Funderburk
+                    gianna: "77351304-6AD3-476E-8380-0028349369DA", // Gianna Gosser
+                    heike: "2B69E5BB-6D03-4C61-981A-9D64767FE61A", // Heike Hemming
+                    jennie: "CB9CAC69-D0BF-4185-A2E6-7EA0EA25FAF3", // Jennie Julius
+                    jody: "84593B93-1948-4E81-9751-AA06BF53376A", // Jody Johnson
+                    jon: "7CFC609D-9765-4A9C-B662-ACB32C8E18C3", // Jon Doe
+                    keeley: "C82A2257-BBC0-4E15-BA31-A88CA0D5902F", // Keeley Kinzel
+                    kiesha: "CD921B7B-2D04-47A9-B9D3-6C6B963E24B5", // Kiesha Kuhlman
+                    ladonna: "0D6D7933-45C7-4D1B-81CB-D40EA27A94B9", // Ladonna Ledford
+                    leroy: "7A5628F8-C04C-44D2-B693-AEA34423B672", // Leroy Lipscomb
+                    margorie: "A3C10998-9E6F-461A-9C67-EE39E53BC025", // Margorie Molloy
+                    mathew: "4E44E320-D42A-44AD-AD40-E4352525A945", // Mathew Miyashiro
+                    meri: "8D4D999E-B6FF-494D-B367-D582E19F8C64", // Meri Manning
+                    merlene: "B17E71E6-ACF2-4EE9-B267-013C7789AE6D", // Merlene Mcnitt
+                    mickey: "90278007-A1D7-452E-90D2-31BB3805AA52", // Mickey Marr
+                    moe: "AED58275-8A20-4B94-A960-2036519A9353", // Moe Sidelak
+                    monty: "80290826-291A-4D3D-89ED-4E65F2663958", // Montgomery Barns
+                    nell: "22ED0905-2E25-4891-9FDE-BFDFCC84180F", // Nell Nottage
+                    peter: "12E20B8A-1106-491F-821A-A283718116E8", // Peter Piper
+                    ramiro: "2AE7934A-FB99-4029-8B50-8B1FCD9E2613", // Ramiro Renninger
+                    reyes: "337ADD58-CCCC-4831-9836-F7FB999929CF", // Reyes Repka
+                    riva: "517B8DEC-EB37-4434-B915-FF0ADDE10976", // Riva Race
+                    wiley: "3E9F6CCB-50F4-47CB-BF5A-5F482CDB2F7C", // Wiley Woodfin
+                    yoshiko: "916474B4-0AAA-428C-A64B-3920304535AA" // Yoshiko Yount
+                };
+
+                __drivers = {
+                    nick: "D9A40B40-FD98-4CD0-8DFB-87C4C1D48C19", // Nick
+                    andy: "220C9781-DEB7-40F8-8452-2B6E238D9C33" // Andy
+                };
+
+                driverId = __drivers.andy; // Preset the driver
+            }
+        });
+    </script>
+
+</body>
+
+</html>

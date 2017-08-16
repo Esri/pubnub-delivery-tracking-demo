@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<!-- 
+    Copyright 2017 Esri
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+        http://www.apache.org/licenses/LICENSE-2.0
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.​
+-->
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+    <title>Delivery Driver Simulator</title>
+
+    <link rel="stylesheet" href="https://js.arcgis.com/4.4/esri/css/main.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
+        crossorigin="anonymous">
+
+    <style>
+        html,
+        body,
+        #viewDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+        }
+    </style>
+
+    <script type="text/javascript">
+        var dojoConfig = {
+            packages: [{
+                    name: "identity-manager-cacher",
+                    location: "http://nixta.github.io/js-api-identity-manager-cacher/js/4.x"
+                },
+                {
+                    name: "deliveries",
+                    location: location.pathname.replace(/\/[^/]+$/, "/") + "./js/deliveries"
+                }
+            ]
+        };
+    </script>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.pubnub.com/sdk/javascript/pubnub.4.13.0.js"></script>
+    <script src="https://js.arcgis.com/4.4/"></script>
+
+    <script>
+    </script>
+</head>
+
+<body>
+    <button id="pauseSim" type="button" class="btn btn-primary">Pause</button>
+    <button id="resumeSim" type="button" class="btn btn-primary">Resume</button>
+    <div id="viewDiv"></div>
+
+    <script>
+        var currentSims = {};
+
+        var mapView, driversLayer;
+        var serviceLayers;
+
+        var simSpeed = 5,
+            simInterval = 100;
+
+        var pubNubPublishInterval = 1000;
+
+        var pubnub, serviceURL, simServiceURL, pubnubConfig;
+
+        initConfig();
+
+        ///////////////////////////////
+        /// CONFIGURATION
+        ///////////////////////////////
+
+        function initConfig() {
+            // ArcGIS Configuration
+            serviceURL = "YOUR ARCGIS DELIVERYTRACKING SERVICE URL";
+            simServiceURL = "YOUR ARCGIS DRIVERSIMULATION SERVICE URL";
+
+            // PubNub Configuration
+            pubnubConfig = {
+                publishKey: 'YOUR PUBNUB PUBLISH KEY',
+                subscribeKey: 'YOUR PUBNUB SUBSCRIBE KEY'
+            };
+        }
+
+
+        ///////////////////////////////
+        /// MAP + UI + PUBNUB
+        ///////////////////////////////
+
+        require([
+            "esri/Map",
+            "esri/views/MapView",
+            "esri/layers/FeatureLayer",
+            "esri/layers/GraphicsLayer",
+            "esri/Graphic",
+            "esri/symbols/SimpleMarkerSymbol",
+            "deliveries/tools",
+            "deliveries/simtools",
+            "identity-manager-cacher/cacher",
+            "dojo/domReady!"
+        ], function (Map, MapView, FeatureLayer, GraphicsLayer, Graphic, SimpleMarkerSymbol, deliveryTools,
+            deliverySimTools) {
+
+            serviceLayers = deliveryTools.getFeatureLayers(serviceURL);
+            deliverySimTools.getFeatureLayers(simServiceURL);
+
+            driversLayer = new GraphicsLayer();
+
+            var map = new Map({
+                basemap: 'dark-gray-vector',
+                layers: [
+                    driversLayer
+                    // serviceLayers.deliveryFence,
+                    // serviceLayers.route,
+                    // serviceLayers.customer,
+                    // serviceLayers.driver,
+                    // serviceLayers.delivery
+                ]
+            });
+
+            var view = new MapView({
+                container: "viewDiv",
+                map: map,
+                center: [-73.986471073, 40.75961304],
+                zoom: 12
+            });
+
+            mapView = view;
+
+            view.on("click", function (event) {
+                var lat = Math.round(event.mapPoint.latitude * 1000) / 1000;
+                var lon = Math.round(event.mapPoint.longitude * 1000) / 1000;
+                console.log(`"lat": ${lat},\n    "lng": ${lon}`);
+            });
+
+            pubnub = new PubNub(pubnubConfig);
+
+            // Add a listener to start simulating a route when the main app creates it
+            pubnub.addListener({
+                status: function (statusEvent) {
+                    if (statusEvent.error) {
+                        console.log("PubNub Status Event");
+                        console.log(statusEvent);
+                    }
+                },
+                message: function (m) {
+                    console.log(`PubNub Message received on ${m.channel}`);
+                    var channelName = m.channel;
+                    switch (channelName) {
+                        case 'route_created':
+                            var routeId = m.message.routeId.toUpperCase();
+                            var driverId = m.message.driverId.toUpperCase();
+                            var customers = m.message.deliveries.map(function (delivery) {
+                                return delivery.customerId;
+                            });
+                            var currentSimForDriver = currentSims[driverId];
+                            if (currentSimForDriver !== undefined) {
+                                currentSimForDriver.abort();
+                                delete currentSims[driverId];
+                            }
+
+                            deliverySimTools.simulateDrive(driverId, routeId, locationUpdated,
+                                simInterval /* ms */ , 5).then(
+                                function (
+                                    result) {
+                                    result.speed = simSpeed;
+                                    currentSims[result.id] = result;
+                                }).otherwise(function (error) {
+                                console.log(`Error simulating Route ${routeId}`,
+                                    `Driver driverId`, error);
+                                alert(`Error simulating route! ${error.message}`);
+                            });
+                            break;
+                    }
+                    // console.log(m);
+                }
+            });
+
+            pubnub.subscribe({
+                channels: [
+                    'route_created'
+                ]
+            });
+
+            var symbol = new SimpleMarkerSymbol({
+                style: "circle",
+                color: [0, 0, 255],
+                size: 12,
+                outline: {
+                    color: [255, 255, 255],
+                    width: 2
+                }
+            });
+
+            function locationUpdated(newLocation, driverSim, arrivedAtStop, departedStop) {
+                if (newLocation === undefined) {
+                    console.log(`Simulation Complete for ${driverSim.id}`);
+                    return;
+                }
+
+                publishNewLocation(newLocation, driverSim);
+                if (arrivedAtStop) {
+                    console.log(`Just arrived at stop ${driverSim.sequence}`);
+                    publishDeliveryCompleted(driverSim);
+                }
+                moveDriverGraphic(newLocation, driverSim);
+            }
+
+            function moveDriverGraphic(newLocation, driverSim) {
+                driversLayer.remove(driverSim.graphic);
+                driverSim.graphic = new Graphic({
+                    attributes: {
+                        driverId: driverSim.id
+                    },
+                    symbol: symbol,
+                    geometry: newLocation
+                });
+                driversLayer.add(driverSim.graphic);
+            }
+
+            // Publish simulated driver location updates to PubNub as if a driver's device were moving.
+            function publishNewLocation(newLocation, driverSim) {
+                if (driverSim.lastPubNubPublish !== undefined && (performance.now() - driverSim.lastPubNubPublish) <
+                    pubNubPublishInterval) {
+                    return;
+                }
+
+                var pubnubPayload = {
+                    channel: 'all_driver_updates',
+                    message: {
+                        driverId: driverSim.id.toUpperCase(),
+                        lat: newLocation.latitude,
+                        lng: newLocation.longitude
+                    }
+                };
+
+                driverSim.lastPubNubPublish = performance.now();
+
+                if (driverSim.currentRoute != deliverySimTools.cruiseRouteId) {
+                    pubnubPayload.message.routeId = driverSim.routeId;
+                    pubnubPayload.message.sequence = driverSim.sequence;
+                }
+
+                pubnub.publish(pubnubPayload, function (status, response) {
+                    if (status.error) {
+                        console.log(status, response);
+                    }
+                });
+            }
+
+            // Publish that the specific delivery is completed, as if the driver completed it in their app.
+            function publishDeliveryCompleted(driverSim) {
+                // General delivery notification for the route.
+                var pubnubPayload = {
+                    channel: `deliveryComplete+${driverSim.routeId.toUpperCase()}`,
+                    message: {
+                        driverId: driverSim.id.toUpperCase(),
+                        routeId: driverSim.routeId,
+                        sequence: driverSim.sequence
+                    }
+                };
+                console.log(`Pubnub message on delivery complete: ${pubnubPayload.channel}`);
+                pubnub.publish(pubnubPayload, function (status, response) {
+                    if (status.error) {
+                        console.log(status, response);
+                    }
+                });
+
+                pubnubPayload.channel =
+                    `deliveryComplete+${driverSim.routeId.toUpperCase()}+${driverSim.sequence}`;
+                console.log(`Pubnub message on delivery complete: ${pubnubPayload.channel}`);
+                pubnub.publish(pubnubPayload, function (status, response) {
+                    if (status.error) {
+                        console.log(status, response);
+                    }
+                });
+            }
+
+
+            $('#pauseSim').on('click', function (e) {
+                for (var [key, sim] of Object.entries(currentSims)) {
+                    sim.pause();
+                }
+            });
+
+
+            $('#resumeSim').on('click', function (e) {
+                for (var [key, sim] of Object.entries(currentSims)) {
+                    sim.resume();
+                }
+            });
+
+        });
+    </script>
+</body>
+
+</html>
