@@ -5,8 +5,8 @@ A serverless solution to calculate and manage deliveries by a driver to customer
 
 # Features
 * Serverless architecture using ArcGIS Online and PubNub cloud solutions.
-* Use ArcGIS Online to generate optimal delivery routes with drive-time geotriggers.
-* PubNub Function for realtime geotriggering of imminent deliveries.
+* Use ArcGIS Online to generate optimal delivery routes with drive-time geofences.
+* PubNub Function for realtime geofence-based triggering of imminent delivery alerts.
 * Secure communication between PubNub Function and ArcGIS Online.
 * ArcGIS JS API Delivery Tracking App.
 * Simulator app.
