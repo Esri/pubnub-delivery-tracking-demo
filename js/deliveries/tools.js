@@ -115,10 +115,10 @@ define([
             var routeResult = result.routeResults[0];
             _stops = routeResult.stops;
 
-            for (i = 0; i < _stops.length; i++) {
-                var stop = _stops[i];
-                // console.log(`Stop ${stop.attributes.Sequence}: ${stop.attributes.Name}`);
-            }
+            // for (i = 0; i < _stops.length; i++) {
+            //     var stop = _stops[i];
+            //     console.log(`Stop ${stop.attributes.Sequence}: ${stop.attributes.Name}`);
+            // }
 
             // Store the route geometry for display on a map. This will also
             // give us a unique Route ID that glues everything else together.
@@ -214,16 +214,17 @@ define([
     function singlePathPolylineFromRouteDirections(routeResult) {
         var totalPath = [];
         var count = 0;
-        for (i = 0; i < routeResult.directions.features.length; i++) {
-            var directionGeom = routeResult.directions.features[i].geometry;
-            console.log(`Adding ${directionGeom.paths.length} paths from geometry ${i}`);
+
+        routeResult.directions.features.forEach(function (feature, index) {
+            var directionGeom = feature.geometry;
+            console.log(`Adding ${directionGeom.paths.length} paths from geometry ${index}`);
             var singlePath = directionGeom.paths.reduce(function (a, b) {
                 return a.concat(b)
             });
             count += singlePath.length;
             console.log(`Reduced to ${singlePath.length} points`);
             totalPath = totalPath.concat(singlePath);
-        }
+        });
 
         var result = new Polyline({
             paths: [totalPath],
@@ -290,41 +291,38 @@ define([
         var directions = routeResult.directions.features;
         var routeGraphics = [];
         var previousDirectionGraphic;
-        for (var i = 0; i < directions.length; i++) {
-            var directionManeuver = directions[i],
-                maneuverType = directionManeuver.attributes.maneuverType;
+        directions.forEach(function (directionManeuver, index) {
+            var maneuverType = directionManeuver.attributes.maneuverType;
 
             if (maneuverType == 'esriDMTDepart') {
-                continue;
+                return;
             }
 
             if (maneuverType == 'esriDMTStop' && previousDirectionGraphic !== undefined) {
                 previousDirectionGraphic.attributes.PauseAfter = true;
-                continue;
+                return;
             }
 
             var directionGraphic = routeGraphic.clone();
             directionGraphic.geometry = singlePathGeometryFromPolyline(directionManeuver.geometry, routeGraphic.geometry.spatialReference);
             directionGraphic.attributes.RouteID = routeId;
             directionGraphic.attributes.NextStop = 0;
-            directionGraphic.attributes.Sequence = i;
+            directionGraphic.attributes.Sequence = index;
             directionGraphic.attributes.Type = maneuverType;
             directionGraphic.attributes.PauseAfter = false;
             routeGraphics.push(directionGraphic);
 
             previousDirectionGraphic = directionGraphic;
-        }
+        }, this);
 
         __serviceLayers.routeSimLayer.applyEdits({
             addFeatures: routeGraphics
         }).then(function (routeSimSaveResult) {
-            for (i = 0; i < routeSimSaveResult.addFeatureResults.length; i++) {
-                var addedResult = routeSimSaveResult.addFeatureResults[i];
-
+            routeSimSaveResult.addFeatureResults.forEach(function(addedResult) {
                 if (addedResult.error !== null) {
                     console.warn(`Error saving simulation part ${addedResult.error.message}`);
                 }
-            }
+            }, this);
         }).otherwise(function (error) {
             console.error("Error saving route simulation!");
         });
@@ -533,14 +531,12 @@ define([
         }
 
         var customerDict = {};
-        for (i = 0; i < customers.length; i++) {
-            var customer = customers[i];
+        customers.forEach(function (customer) {
             customerDict[customer.attributes.GlobalID] = customer;
-        }
+        });
 
-        for (i = 0; i < stops.length; i++) {
-            var stop = stops[i],
-                customerId = stop.attributes.Name,
+        stops.forEach(function (stop) {
+            var customerId = stop.attributes.Name,
                 customer = customerDict[customerId];
 
             stop.customerFeature = customer;
@@ -551,7 +547,7 @@ define([
             if (customer == undefined) {
                 console.warn(`Could not find customer ${customerId} to attach to ordered stop.`);
             }
-        }
+        })
     }
 
     function getStopDescription(stop) {
@@ -600,19 +596,18 @@ define([
             var successes = [];
             var failures = [];
 
-            for (i = 0; i < additions.length; i++) {
-                var addition = additions[i];
-                var delivery = deliveries[i];
+            additions.forEach(function (addition, index) {
+                var delivery = deliveries[index];
 
                 if (addition.error !== null) {
                     delivery.attributes.saveError = error
                     failures.push(delivery);
-                    console.warn(`Could not write delivery ${i}: ${addition.error.message}`);
+                    console.warn(`Could not write delivery ${index}: ${addition.error.message}`);
                 } else {
                     delivery.attributes.GlobalId = addition.globalId;
                     successes.push(delivery);
                 }
-            }
+            });
 
             if (successes.length == 0) {
                 console.error("Error saving deliveries!");
@@ -660,15 +655,14 @@ define([
         var layerKeys = Object.keys(__serviceLayersTemplate);
         __serviceLayers = {};
 
-        for (i = 0; i < layerKeys.length; i++) {
-            var layerKey = layerKeys[i],
-                layerIndex = __serviceLayersTemplate[layerKey];
+        layerKeys.forEach(function (layerKey) {
+            var layerIndex = __serviceLayersTemplate[layerKey];
             var layer = new FeatureLayer({
                 url: `${baseService}/${layerIndex}`,
                 outFields: ["*"]
             });
             __serviceLayers[layerKey] = layer;
-        }
+        }, this);
 
         __serviceLayersCreated = true;
 
@@ -683,11 +677,10 @@ define([
         var layerKeys = Object.keys(__serviceLayers);
         var layersToLoad = layerKeys.length;
 
-        for (i = 0; i < layerKeys.length; i++) {
-            var layerKey = layerKeys[i],
-                layer = __serviceLayers[layerKey];
+        layerKeys.forEach(function (layerKey) {
+            var layer = __serviceLayers[layerKey];
             layerLoadHandlerForLayer(layer, promise);
-        }
+        });
 
         return promise;
 

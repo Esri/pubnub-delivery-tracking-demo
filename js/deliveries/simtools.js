@@ -286,18 +286,18 @@ define([
 
             var pathToStop = [],
                 subRoutes = [];
-            for (i = 0; i < results.features.length; i++) {
-                var featurePaths = results.features[i].geometry.paths.reduce(function (a, b) {
+            results.features.forEach(function(feature, index) {
+                var featurePaths = feature.geometry.paths.reduce(function (a, b) {
                     return a.concat(b)
                 });
                 pathToStop = pathToStop.concat(featurePaths);
-                if (results.features[i].attributes.PauseAfter == 1 || i == results.features.length - 1) {
+                if (feature.attributes.PauseAfter == 1 || index == results.features.length - 1) {
                     var subRoute = route.clone();
                     subRoute.geometry.paths = [pathToStop];
                     pathToStop = [];
                     subRoutes.push(subRoute);
                 }
-            }
+            });
 
             var sim = getSim(driverId, routeId, subRoutes);
 
@@ -310,8 +310,7 @@ define([
     function getSim(driverId, routeId, subRoutes) {
         __currentSims[driverId] = __currentSims[driverId] || defaultSim();
 
-        for (i = 0; i < subRoutes.length; i++) {
-            var subRoute = subRoutes[i];
+        subRoutes.forEach(function(subRoute) {
             // Average speed in Manhattan is 10mph, or ~4.5m/s, so we'll use 5m/s
             subRoute.geometry = geometryEngine.densify(subRoute.geometry, 5, 'meters');
             // We now have a single-path geometry where each vertex is 5m away from the next (may be closer at original
@@ -323,7 +322,7 @@ define([
                     return a.concat(b);
                 })];
             }
-        }
+        });
 
         var driverSim = __currentSims[driverId];
         driverSim.routeId = routeId;
@@ -358,14 +357,13 @@ define([
         var layerKeys = Object.keys(__simLayersTemplate);
         __simLayers = {};
 
-        for (i = 0; i < layerKeys.length; i++) {
-            var layerKey = layerKeys[i],
-                layerIndex = __simLayersTemplate[layerKey];
+        layerKeys.forEach(function(layerKey) {
+            var layerIndex = __simLayersTemplate[layerKey];
             var layer = FeatureLayer({
                 url: `${baseService}/${layerIndex}`
             });
             __simLayers[layerKey] = layer;
-        }
+        });
 
         __simLayersCreated = true;
 
@@ -380,11 +378,10 @@ define([
         var layerKeys = Object.keys(__simLayers);
         var layersToLoad = layerKeys.length;
 
-        for (i = 0; i < layerKeys.length; i++) {
-            var layerKey = layerKeys[i],
-                layer = __simLayers[layerKey];
+        layerKeys.forEach(function(layerKey) {
+            var layer = __simLayers[layerKey];
             layerLoadHandlerForLayer(layer, promise);
-        }
+        });
 
         return promise;
 
