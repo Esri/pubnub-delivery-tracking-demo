@@ -22,7 +22,7 @@ The demo consists of a JavaScript Delivery Tracking app, ArcGIS Online hosted la
 
 The Delivery Tracking app uses ArcGIS Online to generate the optimal route from the driver to the randomly selected customers. ArcGIS Online will then also generate DriveTime areas. These are polygons that represent an area <= 5 minutes' drive from the customer. PubNub monitors the driver location in relation to these DriveTime areas and alerts the customer when the driver is 5 minutes away.
 
-This demo uses one driver (although it can handle any number) and picks randomly from a set of 30 fictional customers around Manhattan. The demo also includes a Driver Simulator that mimmicks the driver following the generated delivery route.
+This demo uses one driver (although it can handle any number) and picks randomly from a set of 30 fictional customers around Manhattan. The demo also includes a Driver Simulator that mimicks the driver following the generated delivery route.
 
 ## Instructions
 
