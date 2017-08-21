@@ -50,14 +50,14 @@ There are 3 high-level steps to getting this demo working in your own environmen
 3. Create a Module named `Delivery Tracking Module` and a Function within it named `Delivery Tracking Function` (those are just suggestions you can pick whatever names you want). When prompted choose the following (these must be as specified):
     * Event type: `Before Publish or Fire`
     * Channel: `all_driver_updates`
-4. Copy the contents of the [driver-location-update.js](driver-location-update.js) file into the PubNub Function and Save it.
+4. Copy the contents of the [driver-location-update.js](PubNub%20Functions/driver-location-update.js) file into the PubNub Function and Save it.
 
 ### 3. Configure the components
 1. Configure the PubNub Function:
     1. Update `clientID` and `clientSecret` with the Client ID and Client Secret from step 1.2.
     2. Update `baseURL` with the DeliveryTracking URL from step 1.3.v.
     3. Set (and save) the Test Payload with:
-        ```
+        ```json
         {
             "driverId": "220C9781-DEB7-40F8-8452-2B6E238D9C33",
             "lat": 40.778215274460635,
@@ -68,11 +68,11 @@ There are 3 high-level steps to getting this demo working in your own environmen
     5. Publish the test payload and ensure the output shows no errors.
 
 2. Configure the Delivery Tracking app. Edit [index.html](index.html) and locate the `initConfig()` function:
-    1. Set the PubNub keys from step 2.2. 
+    1. Set the PubNub keys from step 2.2.
     2. Set the URLs to the Feature Service URLs from steps 1.3 (`serviceURL`) and 1.4 (`simServiceURL`).
 
 3. Configure the Driver Simulator. Edit [simulate-driver.html](simulate-driver.html) and locate the `initConfig()` function:
-    1. Set the PubNub keys from step 2.2. 
+    1. Set the PubNub keys from step 2.2.
     2. Set the URLs to the Feature Service URLs from steps 1.3 (`serviceURL`) and 1.4 (`simServiceURL`).
 
 ## Resources
