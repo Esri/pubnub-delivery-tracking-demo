@@ -74,24 +74,6 @@
 
         var pubnub, serviceURL, simServiceURL, pubnubConfig;
 
-        initConfig();
-
-        ///////////////////////////////
-        /// CONFIGURATION
-        ///////////////////////////////
-
-        function initConfig() {
-            // ArcGIS Configuration
-            serviceURL = "YOUR ARCGIS DELIVERYTRACKING SERVICE URL";
-            simServiceURL = "YOUR ARCGIS DRIVERSIMULATION SERVICE URL";
-
-            // PubNub Configuration
-            pubnubConfig = {
-                publishKey: 'YOUR PUBNUB PUBLISH KEY',
-                subscribeKey: 'YOUR PUBNUB SUBSCRIBE KEY'
-            };
-        }
-
 
         ///////////////////////////////
         /// MAP + UI + PUBNUB
@@ -106,11 +88,13 @@
             "esri/symbols/SimpleMarkerSymbol",
             "deliveries/tools",
             "deliveries/simtools",
+            "config.js",
             "identity-manager-cacher/cacher",
             "dojo/domReady!"
         ], function (Map, MapView, FeatureLayer, GraphicsLayer, Graphic, SimpleMarkerSymbol, deliveryTools,
-            deliverySimTools) {
+            deliverySimTools, Config) {
 
+            initConfig();
             serviceLayers = deliveryTools.getFeatureLayers(serviceURL);
             deliverySimTools.getFeatureLayers(simServiceURL);
 
@@ -202,6 +186,22 @@
                     width: 2
                 }
             });
+
+            ///////////////////////////////
+            /// CONFIGURATION
+            ///////////////////////////////
+
+            function initConfig() {
+                // ArcGIS Configuration
+                serviceURL = Config.serviceURL;
+                simServiceURL = Config.simServiceURL;
+
+                // PubNub Configuration
+                pubnubConfig = {
+                    publishKey: Config.publishKey,
+                    subscribeKey: Config.subscribeKey
+                };
+            }
 
             function locationUpdated(newLocation, driverSim, arrivedAtStop, departedStop) {
                 if (newLocation === undefined) {
