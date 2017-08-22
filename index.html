@@ -258,7 +258,7 @@
             FeatureLayer, Point, SimpleMarkerSymbol, SimpleLineSymbol, SimpleFillSymbol, UniqueValueRenderer,
             SimpleRenderer,
             Graphic, GraphicsLayer, Query, Basemaps, Search, Legend, LayerList,
-            Print, ScaleBar, deliveryTools, Config) {
+            Print, ScaleBar, deliveryTools, config) {
 
             // Map stuff
             var map, mapView, basemaps, searchWidget, layerWidget, scaleBar;
@@ -299,13 +299,13 @@
 
             function initConfig() {
                 // ArcGIS Configuration
-                serviceURL = Config.serviceURL;
-                simServiceURL = Config.simServiceURL;
+                serviceURL = config.serviceURL;
+                simServiceURL = config.simServiceURL;
 
                 // PubNub Configuration
                 pubnubConfig = {
-                    publishKey: Config.publishKey,
-                    subscribeKey: Config.subscribeKey
+                    publishKey: config.publishKey,
+                    subscribeKey: config.subscribeKey
                 };
             }
 

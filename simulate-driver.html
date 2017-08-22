@@ -92,7 +92,7 @@
             "identity-manager-cacher/cacher",
             "dojo/domReady!"
         ], function (Map, MapView, FeatureLayer, GraphicsLayer, Graphic, SimpleMarkerSymbol, deliveryTools,
-            deliverySimTools, Config) {
+            deliverySimTools, config) {
 
             initConfig();
             serviceLayers = deliveryTools.getFeatureLayers(serviceURL);
@@ -193,13 +193,13 @@
 
             function initConfig() {
                 // ArcGIS Configuration
-                serviceURL = Config.serviceURL;
-                simServiceURL = Config.simServiceURL;
+                serviceURL = config.serviceURL;
+                simServiceURL = config.simServiceURL;
 
                 // PubNub Configuration
                 pubnubConfig = {
-                    publishKey: Config.publishKey,
-                    subscribeKey: Config.subscribeKey
+                    publishKey: config.publishKey,
+                    subscribeKey: config.subscribeKey
                 };
             }
 
