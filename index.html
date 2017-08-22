@@ -241,6 +241,7 @@
             "esri/widgets/Print",
             "esri/widgets/ScaleBar",
             "deliveries/tools",
+            "config.js",
 
             // Bootstrap
             "bootstrap/Collapse",
@@ -257,7 +258,7 @@
             FeatureLayer, Point, SimpleMarkerSymbol, SimpleLineSymbol, SimpleFillSymbol, UniqueValueRenderer,
             SimpleRenderer,
             Graphic, GraphicsLayer, Query, Basemaps, Search, Legend, LayerList,
-            Print, ScaleBar, deliveryTools) {
+            Print, ScaleBar, deliveryTools, Config) {
 
             // Map stuff
             var map, mapView, basemaps, searchWidget, layerWidget, scaleBar;
@@ -298,13 +299,13 @@
 
             function initConfig() {
                 // ArcGIS Configuration
-                serviceURL = "YOUR ARCGIS DELIVERYTRACKING SERVICE URL";
-                simServiceURL = "YOUR ARCGIS DRIVERSIMULATION SERVICE URL";
+                serviceURL = Config.serviceURL;
+                simServiceURL = Config.simServiceURL;
 
                 // PubNub Configuration
                 pubnubConfig = {
-                    publishKey: 'YOUR PUBNUB PUBLISH KEY',
-                    subscribeKey: 'YOUR PUBNUB SUBSCRIBE KEY'
+                    publishKey: Config.publishKey,
+                    subscribeKey: Config.subscribeKey
                 };
             }
 
