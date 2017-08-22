@@ -67,13 +67,14 @@ There are 3 high-level steps to getting this demo working in your own environmen
     4. Save and start (or restart) the module.
     5. Publish the test payload and ensure the output shows no errors.
 
-2. Configure the Delivery Tracking app. Edit [index.html](index.html) and locate the `initConfig()` function:
-    1. Set the PubNub keys from step 2.2.
-    2. Set the URLs to the Feature Service URLs from steps 1.3 (`serviceURL`) and 1.4 (`simServiceURL`).
+2. Configure the app:
+    1. Rename `config.js.template` to `config.js`.
+    2. Set the PubNub keys from step 2.2 in `config.js`.
+    3. Set the URLs to the Feature Service URLs from steps 1.3 (`serviceURL`) and 1.4 (`simServiceURL`) in `config.js`.
 
-3. Configure the Driver Simulator. Edit [simulate-driver.html](simulate-driver.html) and locate the `initConfig()` function:
-    1. Set the PubNub keys from step 2.2.
-    2. Set the URLs to the Feature Service URLs from steps 1.3 (`serviceURL`) and 1.4 (`simServiceURL`).
+3. Run the demo:
+    1. Make sure both `index.html` and `simulate-driver.html` are open.
+    2. In `index.html` click the `Start` button to create a route and begin the simulation.    
 
 ## Resources
 
