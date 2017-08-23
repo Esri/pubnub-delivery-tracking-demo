@@ -37,12 +37,19 @@
             height: 100%;
         }
 
-        #trackingSelector {
-            text-align: center;
+        .start-color {
+            color: forestgreen;
         }
 
-        #deliverySelector {
-            text-align: center;
+        .stop-color {
+            color: #df0000;
+        }
+
+        .esri-view-height-less-than-small .esri-popup__main-container,
+        .esri-view-height-less-than-medium .esri-popup__main-container,
+        .esri-view-height-less-than-large .esri-popup__main-container,
+        .esri-view-height-less-than-xlarge .esri-popup__main-container{
+            width: 350px;
         }
     </style>
 
@@ -158,13 +165,13 @@
                 </div>
             </div>
             <div id="collapseTracking" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="trackingSelectionHeader">
-                <div class="panel-body">
+                <div class="panel-body text-center">
                     <div id="trackinglist-div">
                         <button id="trackingStart" type="button" class="btn btn-default">
-                       <span class="glyphicon glyphicon-play" aria-hidden="true"></span> Start
+                       <span class="glyphicon glyphicon-play start-color" aria-hidden="true"></span> Start
                     </button>
                         <button id="trackingStop" type="button" class="btn btn-default">
-                        <span class="glyphicon glyphicon-stop" aria-hidden="true"></span> Stop
+                        <span class="glyphicon glyphicon-stop stop-color" aria-hidden="true"></span> Stop
                     </button>
                     </div>
                 </div>
@@ -339,9 +346,9 @@
 
                 // Popup
                 mapView.then(function () {
-                    mapView.popup.dockEnabled = false;
                     mapView.popup.dockOptions = {
-                        buttonEnabled: false
+                        position: "top-right",
+                        breakpoint: false
                     };
 
                     initDemoData();
